@@ -47,6 +47,7 @@ Then, if you suspect variant #1, look at the mod directory inside GameData, are 
 > - adding some extra files to the mods or even base game (flags, patches, localizations, etc.);
 > - overwriting existing non-settings files (fix mistype in existing localization or provide own texture);
 > - installation of the mods that are absent in CKAN...
+> 
 > On the other hand, when you start manipulating mod's files you can also delete something, reasons:
 > - parts, flags and other stuff you will never use;
 > - faulty modules...
