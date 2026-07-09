@@ -27,6 +27,13 @@ The first two are perfectly solved by CKAN. For the rest I wrote numerous cmd an
 ## NTFS links
 NTFS (I use Windows mostly) allows to create so called links — you can point to a single file (or directory) from several locations, so this file (or directory) will be a member of several directories at the same time. This is very convenient if you want to have exactly the same game settings in two game instances, or be able to save you game progress in one game instance and then open in another one without copying any files, or if you'd like to save screen-shots from all games to one place.
 
+My script makes links to:
+1. Every directory nested in Saves (not a Saves itself) excluding "scenarios" and "training" (original will be kept), so it takes only savegames made by users.
+2. "Thumbs" directory that stores craft thimbnail images.
+3. "Screenshots" directory, obvious.
+4. ~~"UserLoadingScreens" directory linked to "Screenshots"~~ (disabled currently because stopped working, need some research).
+5. Settings.cfg file, sourse file must be inside directory with config templates, its name must be settings_%locale%.cfg, where %locale% is the first two letters of game language, e.g. "en". (This makes it possible to have a separate file for each language; I am not sure it is really required though... There is a language setting line in the file, but the incorrect value doesn't seem to affect anything.)
+
 ## Mods settings.
 This is the difficult topic. The are many great mods but some of them need adjustments. At least I am not satisfied with the default settings. It is not a big issue if you install such a mod once a year. But when you reinstall it over and over again, spending an extra minute on settings starts to get frustrating. Then you start thinking about replicating your settings.
 
@@ -58,5 +65,11 @@ Variant #2. I've seen only two or three mods using this approach, but it might b
 
 And the last but not the least, #3. Game saves your progress in .sfs files. It is a text file, it can be edited in any text editor. But there is special program for that, named Kerbal Markup Lister (KML). It can work in GUI mode as well as command-line mode. File .sfs has tree structure and has "PARAMETERS" hive that is used, surprisingly, to store parameters. KML application in command-line mode supports export, import and deletion of data sections. So, when mod configuration is finished, you can identify section name where particular mod stores its settings and export this section to a file. After that you can delete existing section and import the proper one back anytime.
 
+So what does my script do in the end? There are two options:
+1. The first one collects names of all directories inside game's GameData and if there are same names in the template GameData directory, copies everything from templates to the game.
+2. The second one deletes "AddOns" directory inside chosen save folder and purges anything non-default in PARAMETERS section of this save; then it collects names of all directories inside game's GameData and if there are same names in the template Saves directory, imports those templates to the chosen save.
+
 ## CKAN cache
-I prefer to keep CKAN cache without limits. But sometimes I forget to purge particular mod from cache before update (or don't want to do it in case update may break something). That's why sometimes I find that there are several versions of the same mod in the cache. Of course, I can purge it by CKAN completely and then re-download the latest. But it is more convenient to delete only outdated versions.
+I prefer to keep CKAN cache without limits. But sometimes I forget to purge particular mod from cache before update (or don't want to do it in case update may break something). Then eventually I find that there are several versions of the same mod in the cache. Of course, I can purge it by CKAN completely and then re-download the latest. But it is more convenient to delete only outdated versions.
+
+My script tries to parse all filenames in the cahe and find names of the mods, groups equal ones and, after confirmation, deletes every group excluding the most recent file.
