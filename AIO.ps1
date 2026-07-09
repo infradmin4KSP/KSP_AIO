@@ -19,11 +19,11 @@ write-host -fore green "Working directory is '$($pwd.path)'.`n"
 
 $optionhash=[ordered]@{
 1 = @{
-title = "Create/make links to centrally stored directories and files."
+title = "Make links to centrally stored directories and files."
 depends_on = "savepath,tmplpath"
 }
 2 = @{
-title = "Populate mod settings into the GameData directory."
+title = "Populate mod settings into the current GameData directory."
 depends_on = "tmplpath"
 }
 3 = @{
@@ -31,12 +31,12 @@ title = "Populate mod settings into the certain savefile."
 depends_on = "tmplpath,kmlpath"
 }
 4 = @{
-title = "Purge duplicates from CKAN cache."
+title = "Remove duplicates from CKAN cache."
 depends_on = "cachepath"
 }
 }
 
-$optionhash.keys | %{$optionhash.$_.enabled = ($optionhash.$_.depends_on -split "," | %{$pathhash.$_.exists}) -notcontains $false}
+$optionhash.keys | %{$optionhash.$_.enabled = ($optionhash.$_.depends_on -replace "\s" -split "," | %{$pathhash.$_.exists}) -notcontains $false}
 $msg=""
 $optionhash.keys | %{if ($optionhash.$_.enabled) {$msg+="`n $($_). $($optionhash.$_.title)"}}
 if ($msg) {write-host -fore yellow "What would you like to do?$msg"} else {write-host -fore red "Nothing can be done. Please check paramaters.";break}
@@ -51,11 +51,11 @@ echo "`nLocale is '$locale'."
 
 if ($optionhash.([int]1).chosen -and $optionhash.([int]1).enabled) {
 echo "`n####################################################################################################"
-echo "# Making links to stored data directories"
+echo "# $($optionhash.([int]1).title)"
 
-$links  = gci "$($pathhash.savepath.path)\saves" -dir | select @{name="path";expression={"$($pwd.path)\Saves\$($_.name)"}},@{name="value";expression={$_.fullname}},@{name="type";expression={"Junction"}}
-$links += "thumbs","Screenshots" | select @{name="path";expression={"$($pwd.path)\$_"}},@{name="value";expression={"$($pathhash.savepath.path)\$_"}},@{name="type";expression={"Junction"}}
-$links += [pscustomobject]@{"path"="$($pwd.path)\UserLoadingScreens";"value"="$($pathhash.savepath.path)\Screenshots";"type"="Junction"}
+$links  = gci "$($pathhash.savepath.path)\saves" -dir | select @{n="path";e={"$($pwd.path)\Saves\$($_.name)"}},@{n="value";e={$_.fullname}},@{n="type";e={"Junction"}}
+$links += "thumbs","Screenshots" | select @{n="path";e={"$($pwd.path)\$_"}},@{n="value";e={"$($pathhash.savepath.path)\$_"}},@{n="type";e={"Junction"}}
+# $links += [pscustomobject]@{"path"="$($pwd.path)\UserLoadingScreens";"value"="$($pathhash.savepath.path)\Screenshots";"type"="Junction"}
 $links += [pscustomobject]@{"path"="$($pwd.path)\settings.cfg";"value"="$($pathhash.tmplpath.path)\settings_$($locale -replace "-\w*$").cfg";"type"="HardLink"}
 $links | select -exp path | ?{test-path $_} | %{gi $_ | %{if (!($_.LinkType) -and (gci $_).count) {ren -path "$($_.fullname)" -new "$($_.fullname).bak" -force} else {del $_ -rec -force}}}
 $links | %{ni -path "$($_.path)" -value "$($_.value)" -itemtype $_.type} | select FullName
@@ -63,7 +63,7 @@ $links | %{ni -path "$($_.path)" -value "$($_.value)" -itemtype $_.type} | selec
 
 if ($optionhash.([int]2).chosen -and $optionhash.([int]2).enabled) {
 echo "`n####################################################################################################"
-echo "# Populate mod setting to directories`n"
+echo "# $($optionhash.([int]2).title)"
 
 $GameData = gc "$($pathhash.tmplpath.path)\GameData.json" | ConvertFrom-Json
 if ($locale -eq "ru") {$exc=@()} else {$exc=@("dictionary.cfg")}
@@ -74,7 +74,6 @@ $todir   = "$($pwd.path)\GameData"
 $dirs = gci $todir -dir | select name
 
 $targets = $dirs | ?{$_.name -notin $($GameData.level2_dirs | select -exp name) -and $_.name -notin $($GameData.extra_dirs | select -exp name)} | select -exp name
-# $targets += $dirs | ?{$_.name -in $($GameData.level2_dirs | select -exp name)} | %{$dd = $_.name; gci $(join-path $todir $_.name) -dir | select @{n="name";e={"$dd\$($_.name)"}}} | select -exp name
 $targets += $dirs | ?{$_.name -in $($GameData.level2_dirs | select -exp name)} | %{gci $(join-path $todir $_.name) -dir} | select -exp fullname | %{$_.replace("$todir\","")}
 $targets += $GameData.extra_dirs | ? {$_.depends_on -like "" -or $_.depends_on -in $($dirs | select -exp name)} | select -exp name
 echo "$($targets.count) potencial target directories were found"
@@ -90,7 +89,7 @@ $GameData.unwanted | ?{$_.depends_on -notin $targets} | %{join-path $todir $_.na
 
 if ($optionhash.([int]3).chosen -and $optionhash.([int]3).enabled) {
 echo "`n####################################################################################################"
-echo "# Populate mod setting to savefiles"
+echo "# $($optionhash.([int]3).title)"
 
 $Saves = gc "$($pathhash.tmplpath.path)\Saves.json" | ConvertFrom-Json
 $entrypattern = "\d/\d/\d*: "
@@ -99,7 +98,7 @@ $todir    = "$($pwd.path)\GameData"
 $save_filterout = @("training","scenarios","Backup")
 $save_filterout = ($save_filterout | %{".*\\$_\\.*"}) -join "|"
 
-$savefiles = gci "$($pwd.path)\Saves" -rec -file -inc "*.sfs" | ?{$_.fullname -notmatch $save_filterout} | select @{name="FileName";expression={$_.FullName}},@{name="Game";expression={$_.Directory.Name}},@{name="File";expression={$_.Name}} | ogv -Title "Select file to alter" –PassThru | select -exp FileName
+$savefiles = gci "$($pwd.path)\Saves" -rec -file -inc "*.sfs" | ?{$_.fullname -notmatch $save_filterout} | select @{n="FileName";e={$_.FullName}},@{n="Game";e={$_.Directory.Name}},@{n="File";e={$_.Name}} | ogv -Title "Select file(s) to be altered:" –pass | select -exp FileName
 
 if ($savefiles) {
 $savefiles | %{split-path -path $_ -parent} | sort -un | %{"$_\AddOns"} | %{if (test-path $_) {del "$_" -rec; echo "Deleted $_."}}
@@ -120,11 +119,11 @@ $todo | %{& "$($pathhash.kmlpath.path)" @("$savefile","--tree","--select=GAME/PA
 
 if ($optionhash.([int]4).chosen -and $optionhash.([int]4).enabled) {
 echo "`n####################################################################################################"
-echo "# Purge duplicates from CKAN cache"
+echo "# $($optionhash.([int]4).title)"
 
-$duplicates = gci $pathhash.cachepath.path -file | sort -des LastWriteTime | select *,@{name="mod";expression={$_.name -replace "^.*?-","" -replace "-KSP|-adoption","" -replace "[0-9v.-]*\.zip$"}} | group mod | sort count | ? {$_.count -gt 1}
+$duplicates = gci $pathhash.cachepath.path -file | sort -des LastWriteTime | select *,@{n="mod";e={$_.name -replace "^.*?-","" -replace "-KSP|-adoption","" -replace "[0-9v.-]*\.zip$"}} | group mod | sort count | ? {$_.count -gt 1}
 if ($duplicates) {
 $duplicates | select count,name | oh
-if ($(Read-Host -Prompt "Whould you like to delete older versions (enter 'yes', any other input will be consifered as 'no')?") -eq "yes") {$duplicates | % {$_.group | select -exp fullname -skip 1} | %{del "$_"; echo $_}} else {echo "Canceled."}
+if ($(Read-Host -Prompt "Do you want to delete older versions (enter 'yes', any other input will be considered 'no')?") -eq "yes") {$duplicates | % {$_.group | select -exp fullname -skip 1} | %{del "$_"; echo $_}} else {echo "Canceled."}
 } else {echo "`nNo duplicates found"}
 }
