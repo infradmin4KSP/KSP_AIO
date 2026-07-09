@@ -29,13 +29,13 @@ NTFS (I use Windows mostly) allows to create so called links — you can point t
 
 My script makes links to:
 1. Every directory nested in Saves (not a Saves itself) excluding "scenarios" and "training" (original will be kept), so it takes only savegames made by users.
-2. "Thumbs" directory that stores craft thimbnail images.
+2. "Thumbs" directory that stores craft thumbnail images.
 3. "Screenshots" directory, obvious.
 4. ~~"UserLoadingScreens" directory linked to "Screenshots"~~ (disabled currently because stopped working, need some research).
-5. Settings.cfg file, sourse file must be inside directory with config templates, its name must be settings_%locale%.cfg, where %locale% is the first two letters of game language, e.g. "en". (This makes it possible to have a separate file for each language; I am not sure it is really required though... There is a language setting line in the file, but the incorrect value doesn't seem to affect anything.)
+5. Settings.cfg file, source file must be inside directory with config templates, its name must be settings_%locale%.cfg, where %locale% is the first two letters of game language, e.g. "en". (This makes it possible to have a separate file for each language; I am not sure it is really required though... There is a language setting line in the file, but the incorrect value doesn't seem to affect anything.)
 
 ## Mods settings.
-This is the difficult topic. The are many great mods but some of them need adjustments. At least I am not satisfied with the default settings. It is not a big issue if you install such a mod once a year. But when you reinstall it over and over again, spending an extra minute on settings starts to get frustrating. Then you start thinking about replicating your settings.
+This is a complex topic, and there will be a lot of text... The are many great mods but some of them need adjustments. At least I am not satisfied with the default settings. It is not a big issue if you install such a mod once a year. But when you reinstall it over and over again, spending an extra minute on settings starts to get frustrating. Then you start thinking about replicating your settings. Even if you have only one game instance, it can also be useful to back up your settings in case of a system re-install or a disk failure. If you spent a day finding the perfect combination of anti-aliasing settings for each game scene, it makes sense to save them for future reference so you don't have to redo the process in a year or two. In writing this document, I assume that the reader is familiar with the general directory structure of the game, as well as how mods are installed and work, and where their files are stored. Therefore, I will describe only the sometimes hidden or non-obvious nuances concerning the settings only. I don't claim to have exhaustive knowledge, but here's what I've learned from my many years of practice and numerous experiments.
 
 I know three methods how mods store their settings.
 1. Files in the mod directory. Can also be divided in:
@@ -68,6 +68,10 @@ And the last but not the least, #3. Game saves your progress in .sfs files. It i
 So what does my script do in the end? There are two options:
 1. The first one collects names of all directories inside game's GameData and if there are same names in the template GameData directory, copies everything from templates to the game.
 2. The second one deletes "AddOns" directory inside chosen save folder and purges anything non-default in PARAMETERS section of this save; then it collects names of all directories inside game's GameData and if there are same names in the template Saves directory, imports those templates to the chosen save.
+
+What are templates?
+- GameData template is a directory with the same directory structure inside like GameData of the KSP but it stores only changed files (those game or mods files that I had changed and want to keep and share between instances). Earlier I was just copying this to the game overwriting everything. But there was a problem: I collected many files for many mods but at current game instance not every mod may be present. So, the script checks and copyies only those that do exist in the current game.
+- Saves template is a directory with collection of .sfs templates (reference settings that I made for certain mods and exported with KML from save files). Each template name as directory of the corresponding mod. Again, the script checks and imports to the chosen save only those files which mods do exist in the current game.
 
 ## CKAN cache
 I prefer to keep CKAN cache without limits. But sometimes I forget to purge particular mod from cache before update (or don't want to do it in case update may break something). Then eventually I find that there are several versions of the same mod in the cache. Of course, I can purge it by CKAN completely and then re-download the latest. But it is more convenient to delete only outdated versions.
