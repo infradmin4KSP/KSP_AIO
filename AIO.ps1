@@ -66,6 +66,7 @@ echo "`n########################################################################
 echo "# $($optionhash.([int]2).title)"
 
 $GameData = gc "$($pathhash.tmplpath.path)\GameData.json" | ConvertFrom-Json
+if (!$GameData) {break}
 if ($locale -eq "ru") {$exc=@()} else {$exc=@("dictionary.cfg")}
 
 $fromdir = "$($pathhash.tmplpath.path)\GameData"
@@ -92,6 +93,7 @@ echo "`n########################################################################
 echo "# $($optionhash.([int]3).title)"
 
 $Saves = gc "$($pathhash.tmplpath.path)\Saves.json" | ConvertFrom-Json
+if (!$Saves) {break}
 $entrypattern = "\d/\d/\d*: "
 $fromdir  = "$($pathhash.tmplpath.path)\Saves"
 $todir    = "$($pwd.path)\GameData"
