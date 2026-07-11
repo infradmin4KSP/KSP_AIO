@@ -55,7 +55,7 @@ echo "# $($optionhash.([int]1).title)"
 
 $links  = gci "$($pathhash.savepath.path)\saves" -dir | select @{n="path";e={"$($pwd.path)\Saves\$($_.name)"}},@{n="value";e={$_.fullname}},@{n="type";e={"Junction"}}
 $links += "thumbs","Screenshots" | select @{n="path";e={"$($pwd.path)\$_"}},@{n="value";e={"$($pathhash.savepath.path)\$_"}},@{n="type";e={"Junction"}}
-# $links += [pscustomobject]@{"path"="$($pwd.path)\UserLoadingScreens";"value"="$($pathhash.savepath.path)\Screenshots";"type"="Junction"}
+$links += [pscustomobject]@{"path"="$($pwd.path)\UserLoadingScreens";"value"="$($pathhash.savepath.path)\Screenshots";"type"="Junction"}
 $links += [pscustomobject]@{"path"="$($pwd.path)\settings.cfg";"value"="$($pathhash.tmplpath.path)\settings_$($locale -replace "-\w*$").cfg";"type"="HardLink"}
 $links | select -exp path | ?{test-path $_} | %{gi $_ | %{if (!($_.LinkType) -and (gci $_).count) {ren -path "$($_.fullname)" -new "$($_.fullname).bak" -force} else {del $_ -rec -force}}}
 $links | %{ni -path "$($_.path)" -value "$($_.value)" -itemtype $_.type} | select FullName
