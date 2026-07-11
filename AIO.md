@@ -37,8 +37,10 @@ My script makes links to:
 1. Every directory nested in Saves (not a Saves itself) excluding "scenarios" and "training" (original will be kept), so it takes only savegames made by users.
 2. "Thumbs" directory that stores craft thumbnail images.
 3. "Screenshots" directory, obvious.
-4. ~~"UserLoadingScreens" directory linked to "Screenshots"~~ (disabled currently because stopped working, needs some research).
+4. "UserLoadingScreens" directory linked to "Screenshots".
 5. Settings.cfg file, source file must be inside directory with config templates, its name must be settings_%locale%.cfg, where %locale% is the first two letters of game language, e.g. "en". (This makes it possible to have a separate file for each language; I am not sure it is really required though... There is a language setting line in the file, but the incorrect value doesn't seem to affect anything.)
+
+If directry to be linked is not empty, it gets ".bak" extension. And a small remark about UserLoadingScreens. This is built-in function, pictures placed in this directory will be added (though there are some format and size limitations) to the slide-show while game is loading, among default images. I link this directory to the Screenshots one.
 
 ## Mods settings.
 This is a complex topic, and there will be a lot of text... The are many great mods but some of them need adjustments. At least I am not satisfied with the default settings. It is not a big issue if you install such a mod once a year. But when you reinstall it over and over again, spending an extra minute on settings starts to get frustrating. Then you start thinking about replicating your settings. Even if you have only one game instance, it can also be useful to back up your settings in case of a system reinstall or a disk failure. If you spent a day finding the perfect combination of anti-aliasing settings for each game scene, it makes sense to save them for future reference so you don't have to redo the process in a year or two.
