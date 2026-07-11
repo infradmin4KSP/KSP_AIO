@@ -38,7 +38,7 @@ My script makes links to:
 2. "Thumbs" directory that stores craft thumbnail images.
 3. "Screenshots" directory, obvious.
 4. "UserLoadingScreens" directory linked to "Screenshots".
-5. Settings.cfg file, source file must be inside directory with config templates, its name must be settings_%locale%.cfg, where %locale% is the first two letters of game language, e.g. "en". (This makes it possible to have a separate file for each language; I am not sure it is really required though... There is a language setting line in the file, but the incorrect value doesn't seem to affect anything.)
+5. "Settings.cfg" file, source file must be inside directory with config templates, its name must be "settings_%locale%.cfg", where %locale% is the first two letters of game language, e.g. "en". (This makes it possible to have a separate file for each language; I am not sure it is really required though... There is a language setting line in the file, but the incorrect value doesn't seem to affect anything.)
 
 If directry to be linked is not empty, it gets ".bak" extension. And a small remark about UserLoadingScreens. This is built-in function, pictures placed in this directory will be added (though there are some format and size limitations) to the slide-show while game is loading, among default images. I link this directory to the Screenshots one.
 
