@@ -75,9 +75,10 @@ Variant #2. I've seen only two or three mods using this approach, but it might b
 
 And the last but not the least, #3. Game saves your progress in .sfs files. It is a text file, it can be edited in any text editor. But there is special program for that, named Kerbal Markup Lister (KML). It can work in GUI mode as well as command-line mode. File .sfs has tree structure and has "PARAMETERS" hive that is used, surprisingly, to store parameters. KML command-line mode supports export, import and deletion of data sections. So, when mod configuration is finished, you can identify section name where particular mod stores its settings and export this section to a file. After that you can delete existing section and/or import the proper one back anytime.
 
-So what does my script do in the end? There are two available actions:
-- One collects names of all directories inside game's GameData and if there are same names in the template GameData directory, copies everything from templates to the game (not only settings, any files actually).
-- Another one deletes "AddOns" directory inside chosen save folder and purges anything non-default in PARAMETERS section of this save; then it collects names of all directories inside game's GameData and if there are same names in the template Saves directory, imports those templates to the chosen save.
+So what does my script do in the end? There are three available actions:
+- One copies files (not only settings, any files actually) from templates to the GameData if same mod directories exist. Also it deletes any files specified in the settings (may be used to remove mod files you don't need).
+- Another one copies those directories that marked as "extra" in the settings. It doesn't check existance of the same directory in the GameData. Useful for "manual" installation of mods. In the settings any extra directory may have "depends_on" parameter — will be copied if a directory with specified name exists in GameData (for dependency tracking).
+- And the third one deletes "AddOns" directory inside chosen save folder and purges anything non-default in PARAMETERS section of this save; then it collects names of all directories inside game's GameData and if there are same names in the template Saves directory, imports those templates to the chosen save.
 Remark about 1.1. and 1.2. types of mods. I keep settings as files only for those using 1.1. approach. For 1.2. I prefer to write patches, all of them sit in the Patch Manager collection which is installed as one of "extra" directories. Patch Manager is not mandatory but useful — it provides in-game interface to see active patches (no need to browse MM logs).
 
 What are templates?
