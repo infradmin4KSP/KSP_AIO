@@ -1,4 +1,4 @@
-﻿# To make the script easily portable between systems, local paths configuration is done via separate .ini file.
+# To make the script easily portable between systems, local paths configuration is done via separate .ini file.
 # Intended to be run by CKAN as a command line, so assumed the present working directory is always the current game instance root directory.
 
 cls
@@ -27,10 +27,14 @@ title = "Populate mod settings into the current GameData directory."
 depends_on = "tmplpath"
 }
 3 = @{
+title = "Populate extra mods into the current GameData directory."
+depends_on = "tmplpath"
+}
+4 = @{
 title = "Populate mod settings into the certain savefile."
 depends_on = "tmplpath,kmlpath"
 }
-4 = @{
+5 = @{
 title = "Remove duplicates from CKAN cache."
 depends_on = "cachepath"
 }
@@ -42,7 +46,7 @@ $optionhash.keys | %{if ($optionhash.$_.enabled) {$msg+="`n $($_). $($optionhash
 if ($msg) {write-host -fore yellow "What would you like to do?$msg"} else {write-host -fore red "Nothing can be done. Please check paramaters.";break}
 $choice = read-host -prompt "Enter you choice (may be several)"
 
-1..4 | %{$optionhash.$_.chosen = $choice -match $_}
+1..5 | %{$optionhash.$_.chosen = $choice -match $_}
 
 if ((1..2 | %{$optionhash.$_.enabled -and $optionhash.$_.chosen}) -contains $true) {
 $locale = $(gc "buildID64.txt" | ?{$_ -match "language"}).replace("language = ","").trim()
@@ -55,7 +59,7 @@ echo "# $($optionhash.([int]1).title)"
 
 $links  = gci "$($pathhash.savepath.path)\saves" -dir | select @{n="path";e={"$($pwd.path)\Saves\$($_.name)"}},@{n="value";e={$_.fullname}},@{n="type";e={"Junction"}}
 $links += "thumbs","Screenshots" | select @{n="path";e={"$($pwd.path)\$_"}},@{n="value";e={"$($pathhash.savepath.path)\$_"}},@{n="type";e={"Junction"}}
-$links += [pscustomobject]@{"path"="$($pwd.path)\UserLoadingScreens";"value"="$($pathhash.savepath.path)\Screenshots";"type"="Junction"}
+# $links += [pscustomobject]@{"path"="$($pwd.path)\UserLoadingScreens";"value"="$($pathhash.savepath.path)\Screenshots";"type"="Junction"}
 $links += [pscustomobject]@{"path"="$($pwd.path)\settings.cfg";"value"="$($pathhash.tmplpath.path)\settings_$($locale -replace "-\w*$").cfg";"type"="HardLink"}
 $links | select -exp path | ?{test-path $_} | %{gi $_ | %{if (!($_.LinkType) -and (gci $_).count) {ren -path "$($_.fullname)" -new "$($_.fullname).bak" -force} else {del $_ -rec -force}}}
 $links | %{ni -path "$($_.path)" -value "$($_.value)" -itemtype $_.type} | select FullName
@@ -72,25 +76,27 @@ if ($locale -eq "ru") {$exc=@()} else {$exc=@("dictionary.cfg")}
 $fromdir = "$($pathhash.tmplpath.path)\GameData"
 $todir   = "$($pwd.path)\GameData"
 
-$dirs = gci $todir -dir | select name
-
-$targets = $dirs | ?{$_.name -notin $($GameData.level2_dirs | select -exp name) -and $_.name -notin $($GameData.extra_dirs | select -exp name)} | select -exp name
-$targets += $dirs | ?{$_.name -in $($GameData.level2_dirs | select -exp name)} | %{gci $(join-path $todir $_.name) -dir} | select -exp fullname | %{$_.replace("$todir\","")}
-$targets += $GameData.extra_dirs | ? {$_.depends_on -like "" -or $_.depends_on -in $($dirs | select -exp name)} | select -exp name
-echo "$($targets.count) potencial target directories were found"
-$todo = $targets | ?{test-path $(join-path $fromdir $_)}
-echo "$($todo.count) applicable source directories were found"
-
 echo "`nCopying files:"
-$todo | % {copy -path "$(join-path $fromdir $_)" -dest "$((join-path $todir $_) -replace "\\\w*$")" -rec -force -exc $exc -pass | select fullname}
+$dirs = gci $fromdir -dir | ?{$_.name -notin $($GameData.level2_dirs).name} | ?{$_.name -notin $($GameData.extra_dirs).name} | ?{test-path $(join-path $todir $_.name)}
+$dirs | % {copy $_.fullname -dest $todir -rec -force -exc $exc -pass | select fullname}
+$dirs = gci $fromdir -dir | ?{$_.name -in $($GameData.level2_dirs).name} | %{gci $_.fullname -dir} | ?{test-path $(join-path $todir "$(split-path $(split-path $_.fullname -parent) -leaf)\$($_.name)")}
+$dirs | % {copy $_.fullname -dest (join-path $todir $(split-path $(split-path $_.fullname -parent) -leaf)) -rec -force -exc $exc -pass | select fullname}
 
 echo "`nDeleting unwanted files of directories:"
-$GameData.unwanted | ?{$_.depends_on -notin $targets} | %{join-path $todir $_.name} | %{if (test-path "$_") {del "$_" -rec; echo $_}}
+$GameData.unwanted | ?{$_.depends_on -notin $(gci $todir -dir | select -exp name)} | %{join-path $todir $_.name} | %{if (test-path "$_") {del "$_" -rec; echo $_}}
 }
 
 if ($optionhash.([int]3).chosen -and $optionhash.([int]3).enabled) {
 echo "`n####################################################################################################"
 echo "# $($optionhash.([int]3).title)"
+
+echo "`nCopying files:"
+$GameData.extra_dirs | ? {$_.depends_on -like "" -or $_.depends_on -in $(gci $todir -dir | select -exp name)} | select -exp name | % {copy $(join-path $fromdir $_) -dest $todir -rec -force -pass | select fullname}
+}
+
+if ($optionhash.([int]4).chosen -and $optionhash.([int]4).enabled) {
+echo "`n####################################################################################################"
+echo "# $($optionhash.([int]4).title)"
 
 $Saves = gc "$($pathhash.tmplpath.path)\Saves.json" | ConvertFrom-Json
 if (!$Saves) {break}
@@ -119,9 +125,9 @@ $todo | %{& "$($pathhash.kmlpath.path)" @("$savefile","--tree","--select=GAME/PA
 } else {echo "`nNo files were selected!"}
 }
 
-if ($optionhash.([int]4).chosen -and $optionhash.([int]4).enabled) {
+if ($optionhash.([int]5).chosen -and $optionhash.([int]5).enabled) {
 echo "`n####################################################################################################"
-echo "# $($optionhash.([int]4).title)"
+echo "# $($optionhash.([int]5).title)"
 
 $duplicates = gci $pathhash.cachepath.path -file | sort -des LastWriteTime | select *,@{n="mod";e={$_.name -replace "^.*?-" -replace "-KSP|-adoption" -replace "[0-9v.-]*\.zip$"}} | group mod | sort count | ? {$_.count -gt 1}
 if ($duplicates) {
