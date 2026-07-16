@@ -1,5 +1,5 @@
 # Goal
-The goal of this script is to simplify management mainly if you have multiple KSP game instances and numerous saves. But simple gamers may also find it useful.
+The goal of this script is to simplify KSP management especially if you have multiple game instances and numerous saves. But simple gamers may also find it useful.
 
 # History
 I play KSP for many years (started somewhen in ~2012). Beside just enjoying vanilla game I always liked to install and test numerous mods. There are a huge number of them... Some are abandoned over time, new ones appear, some have duplicated functionality in whole or in part, some are broken or unfinished... As a result, I often need to make many experiments before letting a new mod into my game pack. When I learned about CKAN I was happy — it greatly simplifies mod installation and dependency tracking processes.
