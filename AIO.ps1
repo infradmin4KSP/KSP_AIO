@@ -1,4 +1,4 @@
-# To make the script easily portable between systems, local paths configuration is done via separate .ini file.
+﻿# To make the script easily portable between systems, local paths configuration is done via separate .ini file.
 # Intended to be run by CKAN as a command line, so assumed the present working directory is always the current game instance root directory.
 
 cls
@@ -6,9 +6,15 @@ $IniPath="$(if ($PSScriptRoot) {"$PSScriptRoot"} else {"."})\AIO.ini"
 $ini = gc $IniPath | ?{$_ -notmatch '^[\[;]' } | %{$_.trim() -replace '"' -replace "\\$" -replace "\s*=\s*","=" -replace "\\","\\" -replace '%(\w+)%(.*)','$($env:$1)$2'} | Out-String | ConvertFrom-StringData
 $($ini.Keys) | %{$ini[$_] = $ExecutionContext.InvokeCommand.ExpandString($ini[$_])}
 if ($ini.kmlpath -notmatch "\.exe$") {$ini.kmlpath = $ini.kmlpath + "\KML.exe"}
+if ($ini.listpath -match "\.txt$") {
+$ini.listfile = $ini.listpath
+$ini.listpath = split-path $ini.listpath -parent
+} else {
+$ini.listfile = $ini.listpath + "\KSP_file_list.txt"
+}
 
 $pathhash=[ordered]@{}
-"savepath","tmplpath","kmlpath","cachepath" | %{
+"savepath","tmplpath","kmlpath","cachepath","listpath","listfile" | %{
 $pathhash.$_ = @{
 exists = ($ini[$_] -and (test-path $ini[$_] -EA 0))
 path = $ini[$_]
@@ -38,6 +44,14 @@ depends_on = "tmplpath,kmlpath"
 title = "Remove duplicates from CKAN cache."
 depends_on = "cachepath"
 }
+6 = @{
+title = "Create current game file listing."
+depends_on = "listpath"
+}
+7 = @{
+title = "Remove all non-vanilla files from the KSP directory."
+depends_on = "listfile"
+}
 }
 
 $optionhash.keys | %{$optionhash.$_.enabled = ($optionhash.$_.depends_on -replace "\s" -split "," | %{$pathhash.$_.exists}) -notcontains $false}
@@ -52,6 +66,9 @@ if ((1..2 | %{$optionhash.$_.enabled -and $optionhash.$_.chosen}) -contains $tru
 $locale = $(gc "buildID64.txt" | ?{$_ -match "language"}).replace("language = ","").trim()
 echo "`nLocale is '$locale'."
 }
+if ((6..7 | %{$optionhash.$_.enabled -and $optionhash.$_.chosen}) -contains $true) {
+$exclisions = @("^CKAN.*","^ckan.exe$","^ckan-windows.exe$")
+}
 
 if ($optionhash.([int]1).chosen -and $optionhash.([int]1).enabled) {
 echo "`n####################################################################################################"
@@ -59,7 +76,7 @@ echo "# $($optionhash.([int]1).title)"
 
 $links  = gci "$($pathhash.savepath.path)\saves" -dir | select @{n="path";e={"$($pwd.path)\Saves\$($_.name)"}},@{n="value";e={$_.fullname}},@{n="type";e={"Junction"}}
 $links += "thumbs","Screenshots" | select @{n="path";e={"$($pwd.path)\$_"}},@{n="value";e={"$($pathhash.savepath.path)\$_"}},@{n="type";e={"Junction"}}
-# $links += [pscustomobject]@{"path"="$($pwd.path)\UserLoadingScreens";"value"="$($pathhash.savepath.path)\Screenshots";"type"="Junction"}
+$links += [pscustomobject]@{"path"="$($pwd.path)\UserLoadingScreens";"value"="$($pathhash.savepath.path)\Screenshots";"type"="Junction"}
 $links += [pscustomobject]@{"path"="$($pwd.path)\settings.cfg";"value"="$($pathhash.tmplpath.path)\settings_$($locale -replace "-\w*$").cfg";"type"="HardLink"}
 $links | select -exp path | ?{test-path $_} | %{gi $_ | %{if (!($_.LinkType) -and (gci $_).count) {ren -path "$($_.fullname)" -new "$($_.fullname).bak" -force} else {del $_ -rec -force}}}
 $links | %{ni -path "$($_.path)" -value "$($_.value)" -itemtype $_.type} | select FullName
@@ -77,9 +94,9 @@ $fromdir = "$($pathhash.tmplpath.path)\GameData"
 $todir   = "$($pwd.path)\GameData"
 
 echo "`nCopying files:"
-$dirs = gci $fromdir -dir | ?{$_.name -notin $($GameData.level2_dirs).name} | ?{$_.name -notin $($GameData.extra_dirs).name} | ?{test-path $(join-path $todir $_.name)}
+$dirs = gci $fromdir -dir | ?{$_.name -notin $($GameData.level2_dirs).name} | ?{$_.name -notin $($GameData.extra_dirs).name} | ?{test-path $(join-path $todir $_.name) -type container}
 $dirs | % {copy $_.fullname -dest $todir -rec -force -exc $exc -pass | select fullname}
-$dirs = gci $fromdir -dir | ?{$_.name -in $($GameData.level2_dirs).name} | %{gci $_.fullname -dir} | ?{test-path $(join-path $todir "$(split-path $(split-path $_.fullname -parent) -leaf)\$($_.name)")}
+$dirs = gci $fromdir -dir | ?{$_.name -in $($GameData.level2_dirs).name} | %{gci $_.fullname -dir} | ?{test-path $(join-path $todir "$(split-path $(split-path $_.fullname -parent) -leaf)\$($_.name)") -type container}
 $dirs | % {copy $_.fullname -dest (join-path $todir $(split-path $(split-path $_.fullname -parent) -leaf)) -rec -force -exc $exc -pass | select fullname}
 
 echo "`nDeleting unwanted files of directories:"
@@ -134,4 +151,32 @@ if ($duplicates) {
 $duplicates | select count,name | oh
 if ($(Read-Host -Prompt "Do you want to delete older versions (enter 'yes', any other input will be considered 'no')?") -eq "yes") {$duplicates | % {$_.group | select -exp fullname -skip 1} | %{del "$_"; echo $_}} else {echo "Canceled."}
 } else {echo "`nNo duplicates found"}
+}
+
+if ($optionhash.([int]6).chosen -and $optionhash.([int]6).enabled) {
+echo "`n####################################################################################################"
+echo "# $($optionhash.([int]6).title)"
+
+$entries = gci $pwd.path -rec | select -exp fullname | %{$_.replace("$($pwd.path)\","")}
+foreach ($exclision in $exclisions) {$entries = $entries | ?{$_ -notmatch $exclision}}
+$entries | set-content $($ini.listfile)
+}
+
+if ($optionhash.([int]7).chosen -and $optionhash.([int]7).enabled) {
+echo "`n####################################################################################################"
+echo "# $($optionhash.([int]7).title)"
+
+$list = gc $ini.listfile
+
+$dirs = gci $pwd.path -dir -rec | select -exp fullname | %{$_.replace("$($pwd.path)\","")} | ?{$_ -notin $list}
+foreach ($i in $($($dirs | %{"$_.+".replace("\","\\")})+$exclisions)) {$dirs = $dirs | ?{$_ -notmatch $i}}
+if ($dirs) {write-host -fore red "`nDirectories to delete:"; $dirs}
+$dirs | %{del $(join-path $pwd.path $_) -rec -force}
+
+$files = gci $pwd.path -file -rec | select -exp fullname | %{$_.replace("$($pwd.path)\","")} | ?{$_ -notin $list}
+foreach ($exclision in $exclisions) {$files = $files | ?{$_ -notmatch $exclision}}
+if ($files) {write-host -fore red "`nFiles to delete:"; $files}
+$files | %{del $(join-path $pwd.path $_) -rec -force | select fullname}
+
+if (!($dirs+$files)) {write-host -fore green "`nNothing to delete."}
 }
