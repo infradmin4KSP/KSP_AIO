@@ -92,7 +92,7 @@ I prefer to keep CKAN cache without limits. But sometimes I forget to purge part
 My script's option #5 tries to parse all filenames in the cache and find names of the mods, groups equal ones and, after confirmation, deletes every group excluding the most recent file.
 
 ## File purge
-Some mods create new files on run: settings, caches, logs, etc. If they are located inside mod's directory CKAN usually provides a choice to delete them as well. But some files go to other locations. If you have deleted mods, these files are wasting space. In rare cases, these files can cause issues.
+Some mods create new files on run: settings, caches, logs, etc. If they are located inside mod's directory CKAN during mod removal usually provides a choice to delete them as well. But some files go to other locations. If you have deleted mods, these files are wasting space. In rare cases, these files can cause issues.
 
 In the script there are two options (#6 and #7).
 First must be run preferably before game ever has been started or modified (fully vanilla). However, you can remove some files you are sure you don't need (e.g. readme.txt) or add something you want to keep forever. Script will create list of files that are part of vanilla game.
