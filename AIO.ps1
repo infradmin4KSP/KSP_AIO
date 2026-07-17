@@ -83,7 +83,7 @@ echo "# $($optionhash.([int]2).title)"
 
 $GameData = gc "$($pathhash.tmplpath.path)\GameData.json" | ConvertFrom-Json
 if (!$GameData) {break}
-if ($locale -eq "ru") {$exc=@()} else {$exc=@("dictionary.cfg")}
+if ($locale -eq "en-us") {$exc=@("dictionary.cfg")} else {$exc=@()}
 
 $fromdir = "$($pathhash.tmplpath.path)\GameData"
 $todir   = "$($pwd.path)\GameData"
