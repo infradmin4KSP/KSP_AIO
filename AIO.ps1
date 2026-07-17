@@ -6,15 +6,10 @@ $IniPath="$(if ($PSScriptRoot) {"$PSScriptRoot"} else {"."})\AIO.ini"
 $ini = gc $IniPath | ?{$_ -notmatch '^[\[;]' } | %{$_.trim() -replace '"' -replace "\\$" -replace "\s*=\s*","=" -replace "\\","\\" -replace '%(\w+)%(.*)','$($env:$1)$2'} | Out-String | ConvertFrom-StringData
 $($ini.Keys) | %{$ini[$_] = $ExecutionContext.InvokeCommand.ExpandString($ini[$_])}
 if ($ini.kmlpath -notmatch "\.exe$") {$ini.kmlpath = $ini.kmlpath + "\KML.exe"}
-if ($ini.listpath -match "\.txt$") {
-$ini.listfile = $ini.listpath
-$ini.listpath = split-path $ini.listpath -parent
-} else {
-$ini.listfile = $ini.listpath + "\KSP_file_list.txt"
-}
+$ini.listpath = $ini.savepath + "\KSP_file_list.txt"
 
 $pathhash=[ordered]@{}
-"savepath","tmplpath","kmlpath","cachepath","listpath","listfile" | %{
+"savepath","tmplpath","kmlpath","cachepath","listpath" | %{
 $pathhash.$_ = @{
 exists = ($ini[$_] -and (test-path $ini[$_] -EA 0))
 path = $ini[$_]
@@ -46,11 +41,11 @@ depends_on = "cachepath"
 }
 6 = @{
 title = "Create current game file listing."
-depends_on = "listpath"
+depends_on = "savepath"
 }
 7 = @{
 title = "Remove all non-vanilla files from the KSP directory."
-depends_on = "listfile"
+depends_on = "listpath"
 }
 }
 
@@ -60,7 +55,7 @@ $optionhash.keys | %{if ($optionhash.$_.enabled) {$msg+="`n $($_). $($optionhash
 if ($msg) {write-host -fore yellow "What would you like to do?$msg"} else {write-host -fore red "Nothing can be done. Please check paramaters.";break}
 $choice = read-host -prompt "Enter you choice (may be several)"
 
-1..5 | %{$optionhash.$_.chosen = $choice -match $_}
+1..7 | %{$optionhash.$_.chosen = $choice -match $_}
 
 if ((1..2 | %{$optionhash.$_.enabled -and $optionhash.$_.chosen}) -contains $true) {
 $locale = $(gc "buildID64.txt" | ?{$_ -match "language"}).replace("language = ","").trim()
@@ -159,17 +154,17 @@ echo "# $($optionhash.([int]6).title)"
 
 $entries = gci $pwd.path -rec | select -exp fullname | %{$_.replace("$($pwd.path)\","")}
 foreach ($exclision in $exclisions) {$entries = $entries | ?{$_ -notmatch $exclision}}
-$entries | set-content $($ini.listfile)
+$entries | set-content $($ini.listpath)
 }
 
 if ($optionhash.([int]7).chosen -and $optionhash.([int]7).enabled) {
 echo "`n####################################################################################################"
 echo "# $($optionhash.([int]7).title)"
 
-$list = gc $ini.listfile
+$list = gc $ini.listpath
 
 $dirs = gci $pwd.path -dir -rec | select -exp fullname | %{$_.replace("$($pwd.path)\","")} | ?{$_ -notin $list}
-foreach ($i in $($($dirs | %{"$_.+".replace("\","\\")})+$exclisions)) {$dirs = $dirs | ?{$_ -notmatch $i}}
+foreach ($i in $(@($dirs | %{"$_.+".replace("\","\\")})+$exclisions)) {$dirs = $dirs | ?{$_ -notmatch $i}}
 if ($dirs) {write-host -fore red "`nDirectories to delete:"; $dirs}
 $dirs | %{del $(join-path $pwd.path $_) -rec -force}
 
