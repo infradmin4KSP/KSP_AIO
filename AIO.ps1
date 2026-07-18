@@ -102,6 +102,12 @@ if ($optionhash.([int]3).chosen -and $optionhash.([int]3).enabled) {
 echo "`n####################################################################################################"
 echo "# $($optionhash.([int]3).title)"
 
+$GameData = gc "$($pathhash.tmplpath.path)\GameData.json" | ConvertFrom-Json
+if (!$GameData) {break}
+
+$fromdir = "$($pathhash.tmplpath.path)\GameData"
+$todir   = "$($pwd.path)\GameData"
+
 echo "`nCopying files:"
 $GameData.extra_dirs | ? {$_.depends_on -like "" -or $_.depends_on -in $(gci $todir -dir | select -exp name)} | select -exp name | % {copy $(join-path $fromdir $_) -dest $todir -rec -force -pass | select fullname}
 }
