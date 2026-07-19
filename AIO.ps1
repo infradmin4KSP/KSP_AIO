@@ -1,4 +1,4 @@
-﻿# To make the script easily portable between systems, local paths configuration is done via separate .ini file.
+# To make the script easily portable between systems, local paths configuration is done via separate .ini file.
 # Intended to be run by CKAN as a command line, so assumed the present working directory is always the current game instance root directory.
 
 cls
@@ -118,26 +118,26 @@ echo "# $($optionhash.([int]4).title)"
 
 $Saves = gc "$($pathhash.tmplpath.path)\Saves.json" | ConvertFrom-Json
 if (!$Saves) {break}
-$entrypattern = "\d/\d/\d*: "
+$entrypattern="^(\d/){1,2}\d+"
 $fromdir  = "$($pathhash.tmplpath.path)\Saves"
 $todir    = "$($pwd.path)\GameData"
 $save_filterout = @("training","scenarios","Backup")
 $save_filterout = ($save_filterout | %{".*\\$_\\.*"}) -join "|"
 
 $savefiles = gci "$($pwd.path)\Saves" -rec -file -inc "*.sfs" | ?{$_.fullname -notmatch $save_filterout} | select @{n="FileName";e={$_.FullName}},@{n="Game";e={$_.Directory.Name}},@{n="File";e={$_.Name}} | ogv -Title "Select file(s) to be altered:" –pass | select -exp FileName
-
 if ($savefiles) {
 $savefiles | %{split-path -path $_ -parent} | sort -un | %{"$_\AddOns"} | %{if (test-path $_) {del "$_" -rec; echo "Deleted $_."}}
 
 $dirs = gci $todir -dir | select -exp name
-$todo = gci $fromdir -file | sort -des name | ? {$_.basename -in $dirs} | select -exp fullname
 
 foreach ($savefile in $savefiles) {
-& "$($pathhash.kmlpath.path)" @("$savefile","--tree","--select=GAME/PARAMETERS")
-& "$($pathhash.kmlpath.path)" @("$savefile","--tree","--select=GAME/PARAMETERS") | ?{$_ -match $entrypattern} | %{$_ -replace $entrypattern} | ?{$_ -notin $($Saves.good_parameters)} | %{& "$($pathhash.kmlpath.path)" @("$savefile","--tree","--select=GAME/PARAMETERS/$_","--delete"; sleep 1)}
+& "$($pathhash.kmlpath.path)" @("$savefile","--tree","--select=GAME/PARAMETERS") | ?{$_ -match $entrypattern} | %{$_ -replace "$entrypattern\: "} | ?{$_ -notin $($Saves.good_parameters+@("PARAMETERS"))} | %{& "$($pathhash.kmlpath.path)" @("$savefile","--tree","--select=GAME/PARAMETERS/$_","--delete"; sleep 1)}
+foreach ($sc in $(& "$($pathhash.kmlpath.path)" @("$savefile","--tree","--select=GAME") | ?{$_ -match "SCENARIO"} | %{$_ -replace "$entrypattern\: SCENARIO \(|\)"} | ?{$_ -notin $($Saves.good_scenarios)})) {
+%{& "$($pathhash.kmlpath.path)" @("$savefile","--tree","--select=$((& "$($pathhash.kmlpath.path)" @("$savefile","--tree","--select=GAME") | ?{$_ -match "SCENARIO \($sc\)"}) -replace ": SCENARIO.*")","--delete"; sleep 1)}
+}
 sleep 3
-$todo | %{& "$($pathhash.kmlpath.path)" @("$savefile","--tree","--select=GAME/PARAMETERS/$($($Saves.good_parameters)[-1])","--import-after=$_"); sleep 1}
-& "$($pathhash.kmlpath.path)" @("$savefile","--tree","--select=GAME/PARAMETERS")
+gci "$fromdir\PARAMETERS" -file | sort -des name | ? {$_.basename -in $dirs} | select -exp fullname | %{& "$($pathhash.kmlpath.path)" @("$savefile","--tree","--select=$((& "$($pathhash.kmlpath.path)" @("$savefile","--tree","--select=GAME/PARAMETERS") | ?{$_ -match "$entrypattern\: "} | select -l 1) -replace ": \w+$")","--import-after=$_"); sleep 1}
+gci "$fromdir\SCENARIO" -file | sort -des name | ? {$_.basename -in $dirs} | select -exp fullname | %{& "$($pathhash.kmlpath.path)" @("$savefile","--tree","--select=$((& "$($pathhash.kmlpath.path)" @("$savefile","--tree","--select=GAME") | ?{$_ -match "$entrypattern\: SCENARIO"} | select -l 1) -replace ":[\w ()]+$")","--import-after=$_"); sleep 1}
 & "$($pathhash.kmlpath.path)" @("$savefile","--repair")
 }
 } else {echo "`nNo files were selected!"}
