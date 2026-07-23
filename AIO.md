@@ -2,7 +2,7 @@
 The goal of this script is to simplify KSP management especially if you have multiple game instances and numerous saves. But simple gamers may also find it useful.
 
 # History
-I play KSP for many years (started somewhen in ~2012). Beside just enjoying vanilla game I always liked to install and test numerous mods. There are a huge number of them... Some are abandoned over time, new ones appear, some have duplicated functionality in whole or in part, some are broken or unfinished... As a result, I often need to make many experiments before letting a new mod into my game pack. When I learned about CKAN I was happy — it greatly simplifies mod installation and dependency tracking processes.
+I've played KSP for many years (started somewhen in ~2012). Besides just enjoying vanilla game I always liked to install and test numerous mods. There are a huge number of them... Some are abandoned over time, new ones appear, some have duplicated functionality in whole or in part, some are broken or unfinished... As a result, I often need to do many experiments before letting a new mod into my game pack. When I learned about CKAN I was happy — it greatly simplifies mod installation and dependency tracking processes.
 
 I follow these principles for KSP:
 - keep game spirit and balance;
@@ -12,12 +12,12 @@ I follow these principles for KSP:
 - focus on visual quality;
 - retain portability of saves.
 
-That's why I always spend a lot of time trying to keep the minimum number of installed mods, removing duplicated, diving deep in their configuration, writing patches. Sometimes I try to make my modest contribution to development.
+That's why I always spend a lot of time trying to keep the minimum number of installed mods, removing duplicates, diving deep into their configuration, writing patches. Sometimes I try to make my modest contribution to development.
 
-Over time, I developed a practice to have several game instances installed: the main one (just to enjoy gameplay), same setup for polishing mod combination, more or less clean version for deep isolated experiments with new mods or resolving specific issues, different localizations and so on. Of course, sometimes I need to delete some instances or populate new ones.
+Over time, I developed the practice of having several game instances installed: the main one (just to enjoy gameplay), same setup for polishing mod combination, more or less clean version for deep isolated experiments with new mods or resolving specific issues, different localizations and so on. Of course, sometimes I need to delete some instances or populate new ones.
 In this situation, I came up with the idea of ​​a shared (or portable) profile. Its purposes are:
 - easily share some information (saves, crafts and their thumbs, etc.) between game instances;
-- preserve all valuable information (saves and crafts again, screenshots) in case I want to delete particular game instance;
+- preserve all valuable information (saves and crafts again, screenshots) in case I want to delete a particular game instance;
 - store a reference copy of game and mod settings (those that I think fit best) easily and apply them if the mods were re-installed (or altered in-game but I don't like the result and want to revert);
 - backup simplicity — no need to make backups of numerous different files and directories nested in the game's one, just copy whole profile.
 The structure of this profile that I use:
@@ -36,7 +36,7 @@ The structure of this profile that I use:
 └── KSP_file_list.txt
 ```
 Where:
-"_info" — Just a collection of useful information regarding KSP (notes, maps, etc.). "crafts" — Here I place downloaded crafts. "utilities" — A place for some small programms like KLM. All this has nothing to do with the script, it is mentioned simply for completeness of information.
+"_info" — Just a collection of useful information regarding KSP (notes, maps, etc.). "crafts" — Here I place downloaded crafts. "utilities" — A place for some small programs like KML. All this has nothing to do with the script, it is mentioned simply for completeness of information.
 "CKAN" — The main CKAN profile. This directory isn't used in the current script, but I manually link it into %LOCALAPPDATA%. This way, I always have a backup copy of my CKAN settings that can be easily transferred to another system if needed. However, the "Downloads" subfolder, where the cache is stored, is linked from a different location to prevent the backup from becoming bloated.
 "saves", "Screenshots", "thumbs" — These are being linked into game root directory by described script.
 "templates" — Storage for files that can be copied over by the script to the game (settings, my patches, small fixes, etc.)
@@ -55,12 +55,12 @@ Now a little about the "templates" directory. Here is its tree view.
 ```
 Where:
 "GameData" — directory where stored mods' files (to be copied by the script)
-"GameData.json" — settings file for certian mods.
+"GameData.json" — settings file for certain mods.
 "Saves" — directory where stored .sfs templates (to be imported into the savefile by the script using KML utility)
 "Saves.json" — settings file for the use of KML.
 "settings_*.cfg" -reference game settings files.
 
-Sharing is done via NTFS links, so the in-game changes appear at the same time in the profile. Game settings.cfg I also link actually, as I finished experimenting with it years ago. And mod settings still can require review after updates, that's why I store them separately and just copy over to game directory. If I manage to configure the mod better than before, then I copy the new settings into the templates manually.
+Sharing is done via NTFS links, so the in-game changes appear at the same time in the profile. Actually I also link game's settings.cfg, as I finished experimenting with it years ago. And mod settings still can require review after updates, that's why I store them separately and just copy over to game directory. If I manage to configure the mod better than before, then I copy the new settings into the templates manually.
 
 As a result, a set of typical tasks arises:
 - (re-/un-)install full mod pack (all mods I consider good to have to enjoy the game);
@@ -70,7 +70,7 @@ As a result, a set of typical tasks arises:
 - manage CKAN cache;
 - purge mod files left after mods uninstallation.
 
-The first two are perfectly solved by CKAN. For the rest I wrote numerous cmd and powershell scripts over the past years. Recently I decided to create a single script combining all needed functions. Here it is. Intended to be started by CKAN as a custom command line. Here is an abstract from CKAN config:
+The first two are perfectly solved by CKAN. For the rest I wrote numerous cmd and powershell scripts over the past years. Recently I decided to create a single script combining all needed functions. Here it is. Intended to be started by CKAN as a custom command line. Here is an excerpt from the CKAN config:
 ```
   "CommandLines": [
     "KSP_x64.exe -single-instance",
@@ -79,7 +79,7 @@ The first two are perfectly solved by CKAN. For the rest I wrote numerous cmd an
 ```
 
 ## NTFS links
-NTFS (I use Windows mostly) allows to create so called links — you can point to a single file (or directory) from several locations, so this file (or directory) will be a member of several directories at the same time. This is very convenient if you want to have exactly the same game settings in two game instances, or be able to save you game progress in one game instance and then open in another one without copying any files, or if you'd like to save screenshots from all games in one place. Or simply for backup purposes, once I lost all my KSP progress due to HDD malfunction.
+NTFS (I use Windows mostly) allows to create so-called links — you can point to a single file (or directory) from several locations, so this file (or directory) will be a member of several directories at the same time. This is very convenient if you want to have exactly the same game settings in two game instances, or be able to save your game progress in one game instance and then open in another one without copying any files, or if you'd like to save screenshots from all games in one place. Or simply for backup purposes, once I lost all my KSP progress due to HDD malfunction.
 
 My script makes (option #1) links to:
 1. Every directory nested in Saves (not a Saves itself) excluding "scenarios" and "training" (original will be kept), so it takes only savegames made by users.
@@ -88,14 +88,14 @@ My script makes (option #1) links to:
 4. "UserLoadingScreens" directory linked to "Screenshots".
 5. "Settings.cfg" file, source file must be inside directory with config templates, its name must be "settings_%locale%.cfg", where %locale% is the first two letters of game language, e.g. "en". (This makes it possible to have a separate file for each language; I am not sure it is really required though... There is a language setting line in the file, but the incorrect value doesn't seem to affect anything.)
 
-If the directory to be linked is not empty, it gets ".bak" extension. And a small remark about UserLoadingScreens. This is built-in function, pictures placed in this directory will be added (though there are some format and size limitations) to the slideshow while game is loading, among default images. I link this directory to the Screenshots one.
+If the directory to be linked is not empty, it gets ".bak" extension. And a small remark about UserLoadingScreens. This is a built-in function, pictures placed in this directory will be added (though there are some format and size limitations) to the slideshow while game is loading, among default images. I link this directory to the Screenshots one.
 
 ## Mods settings.
-This is a complex topic, and there will be a lot of text... The are many great mods but some of them need adjustments. At least I am not satisfied with the default settings. It is not a big issue if you install such a mod once a year. But when you reinstall it over and over again, spending an extra minute on settings starts to get frustrating. Then you start thinking about replicating your settings. Even if you have only one game instance, it can also be useful to back up your settings in case of a system reinstall or a disk failure. If you spent a day finding the perfect combination of anti-aliasing settings for each game scene, it makes sense to save them for future reference, so you don't have to redo the process in a year or two.
+This is a complex topic, and there will be a lot of text... There are many great mods but some of them need adjustments. At least I am not satisfied with the default settings. It is not a big issue if you install such a mod once a year. But when you reinstall it over and over again, spending an extra minute on settings starts to get frustrating. Then you start thinking about replicating your settings. Even if you have only one game instance, it can also be useful to back up your settings in case of a system reinstall or a disk failure. If you spent a day finding the perfect combination of anti-aliasing settings for each game scene, it makes sense to save them for future reference, so you don't have to redo the process in a year or two.
 
 In writing this document, I assume that the reader is familiar with the general directory structure of the game, as well as how mods are installed and work, and where their files are stored. Therefore, I will describe only the sometimes hidden or non-obvious nuances concerning the settings only. I don't claim to have exhaustive knowledge, but here's what I've learned from my many years of practice and numerous experiments.
 
-I know three methods how mods store their settings.
+I know three methods by which mods store their settings.
 1. Files in the mod directory. Can also be divided in:
    1. .cfg or .txt or other files formats (I've seen .xml), which are just read by the mod library.
    2. .cfg or .txt files, which are read by Module Manager, settings from those files are being added to the game db and the mod reads parameters from there.
@@ -131,7 +131,7 @@ Remark about 1.1. and 1.2. types of mods. I keep settings as files only for thos
 
 What are templates?
 - GameData template is a directory with the same directory structure inside like GameData of the KSP but it stores only changed files (those game or mods files that I had changed and want to keep and share between instances). Earlier I was just copying this to the game overwriting everything. But there was a problem: I collected many files for many mods but at current game instance not every mod may be present. So, the script checks and copies only those that do exist in the current game.
-- Saves template is a directory with collection of .sfs templates (reference settings that I made for certain mods and exported with KML from save files). Each template name as directory of the corresponding mod. Again, the script checks and imports to the chosen save only those files which mods do exist in the current game.
+- Saves template is a directory with collection of .sfs templates (reference settings that I made for certain mods and exported with KML from save files). Each template is named after the corresponding mod's directory. Again, the script checks and imports to the chosen save only those files which mods do exist in the current game.
 
 ## CKAN cache
 I prefer to keep CKAN cache without limits. But sometimes I forget to purge particular mod from cache before update (or don't want to do it in case update may break something). Then eventually I find that there are several versions of the same mod in the cache. Of course, I can purge it by CKAN completely and then re-download the latest. But it is more convenient to delete only outdated versions.
@@ -141,6 +141,6 @@ My script's option #5 tries to parse all filenames in the cache and find names o
 ## File purge
 Some mods create new files when the game launched: settings, cache, logs, etc. If these are located within the mod's directory, CKAN usually prompts you to delete them as well when you uninstall the mod. However, some files are placed in other locations. Then, if you uninstall mods, these files just waste space. In rare cases, these files can cause problems.
 
-In the script there are two options (#6 and #7) regarding this.
+Script has two options (#6 and #7) for this.
 First must be run preferably before game ever has been started or modified (fully vanilla). However, you can remove some files you are sure you don't need (e.g. readme.txt) or add something you want to keep forever. Script will create list of files that are part of vanilla game and place it in the savepath (same as for links).
 Then anytime you can run the second one, it will analyse existing files and remove all that are not on the list. There are exceptions configured: any CKAN-related files (CKAN stores some settings and history in the game directory, also in some scenarios it is intended to place CKAN executable there). Links created by the very first script step will be deleted as well. But any vanilla files that were overwritten cannot be restored.
