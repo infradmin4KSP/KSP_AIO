@@ -1,4 +1,4 @@
-# To make the script easily portable between systems, local paths configuration is done via separate .ini file.
+﻿# To make the script easily portable between systems, local paths configuration is done via separate .ini file.
 # Intended to be run by CKAN as a command line, so assumed the present working directory is always the current game instance root directory.
 
 cls
@@ -62,7 +62,7 @@ $locale = $(gc "buildID64.txt" | ?{$_ -match "language"}).replace("language = ",
 echo "`nLocale is '$locale'."
 }
 if ((6..7 | %{$optionhash.$_.enabled -and $optionhash.$_.chosen}) -contains $true) {
-$exclisions = @("^CKAN.*","^ckan.exe$","^ckan-windows.exe$")
+$exclusions = @("^CKAN.*","^ckan.exe$","^ckan-windows.exe$")
 }
 
 if ($optionhash.([int]1).chosen -and $optionhash.([int]1).enabled) {
@@ -124,7 +124,7 @@ $todir    = "$($pwd.path)\GameData"
 $save_filterout = @("training","scenarios","Backup")
 $save_filterout = ($save_filterout | %{".*\\$_\\.*"}) -join "|"
 
-$savefiles = gci "$($pwd.path)\Saves" -rec -file -inc "*.sfs" | ?{$_.fullname -notmatch $save_filterout} | select @{n="FileName";e={$_.FullName}},@{n="Game";e={$_.Directory.Name}},@{n="File";e={$_.Name}} | ogv -Title "Select file(s) to be altered:" –pass | select -exp FileName
+$savefiles = gci "$($pwd.path)\Saves" -rec -file -inc "*.sfs" | ?{$_.fullname -notmatch $save_filterout} | select @{n="FileName";e={$_.FullName}},@{n="Game";e={$_.Directory.Name}},@{n="File";e={$_.Name}} | ogv -title "Select file(s) to be altered:" -pass | select -exp FileName
 if ($savefiles) {
 $savefiles | %{split-path -path $_ -parent} | sort -un | %{"$_\AddOns"} | %{if (test-path $_) {del "$_" -rec; echo "Deleted $_."}}
 
@@ -159,7 +159,7 @@ echo "`n########################################################################
 echo "# $($optionhash.([int]6).title)"
 
 $entries = gci $pwd.path -rec | select -exp fullname | %{$_.replace("$($pwd.path)\","")}
-foreach ($exclision in $exclisions) {$entries = $entries | ?{$_ -notmatch $exclision}}
+foreach ($exclusion in $exclusions) {$entries = $entries | ?{$_ -notmatch $exclusion}}
 $entries | set-content $($ini.listpath)
 }
 
@@ -170,12 +170,12 @@ echo "# $($optionhash.([int]7).title)"
 $list = gc $ini.listpath
 
 $dirs = gci $pwd.path -dir -rec | select -exp fullname | %{$_.replace("$($pwd.path)\","")} | ?{$_ -notin $list}
-foreach ($i in $(@($dirs | %{"$_.+".replace("\","\\")})+$exclisions)) {$dirs = $dirs | ?{$_ -notmatch $i}}
+foreach ($i in $(@($dirs | %{"$_.+".replace("\","\\")})+$exclusions)) {$dirs = $dirs | ?{$_ -notmatch $i}}
 if ($dirs) {write-host -fore red "`nDirectories to delete:"; $dirs}
 $dirs | %{del $(join-path $pwd.path $_) -rec -force}
 
 $files = gci $pwd.path -file -rec | select -exp fullname | %{$_.replace("$($pwd.path)\","")} | ?{$_ -notin $list}
-foreach ($exclision in $exclisions) {$files = $files | ?{$_ -notmatch $exclision}}
+foreach ($exclusion in $exclusions) {$files = $files | ?{$_ -notmatch $exclusion}}
 if ($files) {write-host -fore red "`nFiles to delete:"; $files}
 $files | %{del $(join-path $pwd.path $_) -rec -force | select fullname}
 
