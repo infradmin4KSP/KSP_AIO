@@ -1,4 +1,4 @@
-﻿# To make the script easily portable between systems, local paths configuration is done via separate .ini file.
+# To make the script easily portable between systems, local paths configuration is done via separate .ini file.
 # Intended to be run by CKAN as a command line, so assumed the present working directory is always the current game instance root directory.
 
 cls
@@ -73,17 +73,17 @@ $links  = gci "$($pathhash.savepath.path)\saves" -dir | select @{n="path";e={"$(
 $links += "thumbs","Screenshots" | select @{n="path";e={"$($pwd.path)\$_"}},@{n="value";e={"$($pathhash.savepath.path)\$_"}},@{n="type";e={"Junction"}}
 $links += [pscustomobject]@{"path"="$($pwd.path)\UserLoadingScreens";"value"="$($pathhash.savepath.path)\Screenshots";"type"="Junction"}
 $links += [pscustomobject]@{"path"="$($pwd.path)\settings.cfg";"value"="$($pathhash.tmplpath.path)\settings_$($locale -replace "-\w*$").cfg";"type"="HardLink"}
-$links | select -exp path | ?{test-path $_} | %{gi $_ | %{if (!($_.LinkType) -and (gci $_).count) {ren -path "$($_.fullname)" -new "$($_.fullname).bak" -force} else {del $_ -rec -force}}}
+$links | select -exp path | ?{test-path $_} | %{gi $_ | %{if (!($_.LinkType) -and (gci $_).count) {ren -path "$($_.fullname)" -new "$($_.fullname)-$(get-date -f yyyMMdd-HHmm).bak" -force} else {del $_ -rec -force}}}
 $links | %{ni -path "$($_.path)" -value "$($_.value)" -itemtype $_.type} | select FullName
 }
 
 if ($optionhash.([int]2).chosen -and $optionhash.([int]2).enabled) {
 echo "`n####################################################################################################"
 echo "# $($optionhash.([int]2).title)"
+$exc=@("dictionary*.cfg")
 
 $GameData = gc "$($pathhash.tmplpath.path)\GameData.json" | ConvertFrom-Json
 if (!$GameData) {break}
-if ($locale -eq "en-us") {$exc=@("dictionary.cfg")} else {$exc=@()}
 
 $fromdir = "$($pathhash.tmplpath.path)\GameData"
 $todir   = "$($pwd.path)\GameData"
@@ -91,6 +91,7 @@ $todir   = "$($pwd.path)\GameData"
 echo "`nCopying files:"
 $dirs = gci $fromdir -dir | ?{$_.name -notin $($GameData.level2_dirs).name} | ?{$_.name -notin $($GameData.extra_dirs).name} | ?{test-path $(join-path $todir $_.name) -type container}
 $dirs | % {copy $_.fullname -dest $todir -rec -force -exc $exc -pass | select fullname}
+$dirs | % {gci $_.fullname -rec -file -inc "dictionary_$($locale -replace "-\w*$").cfg"} | %{copy $_.fullname -dest "$($(split-path $_.fullname -parent) -replace [regex]::escape($fromdir),$todir)\dictionary.cfg" -pass | select fullname}
 $dirs = gci $fromdir -dir | ?{$_.name -in $($GameData.level2_dirs).name} | %{gci $_.fullname -dir} | ?{test-path $(join-path $todir "$(split-path $(split-path $_.fullname -parent) -leaf)\$($_.name)") -type container}
 $dirs | % {copy $_.fullname -dest (join-path $todir $(split-path $(split-path $_.fullname -parent) -leaf)) -rec -force -exc $exc -pass | select fullname}
 
@@ -170,7 +171,7 @@ echo "# $($optionhash.([int]7).title)"
 $list = gc $ini.listpath
 
 $dirs = gci $pwd.path -dir -rec | select -exp fullname | %{$_.replace("$($pwd.path)\","")} | ?{$_ -notin $list}
-foreach ($i in $(@($dirs | %{"$_.+".replace("\","\\")})+$exclusions)) {$dirs = $dirs | ?{$_ -notmatch $i}}
+foreach ($i in $(@($dirs | %{"$([regex]::escape($_)).+"})+$exclusions)) {$dirs = $dirs | ?{$_ -notmatch $i}}
 if ($dirs) {write-host -fore red "`nDirectories to delete:"; $dirs}
 $dirs | %{del $(join-path $pwd.path $_) -rec -force}
 
