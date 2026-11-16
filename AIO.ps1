@@ -150,8 +150,8 @@ echo "# $($optionhash.([int]5).title)"
 
 $duplicates = gci $pathhash.cachepath.path -file | sort -des LastWriteTime | select *,@{n="mod";e={$_.name -replace "^.*?-" -replace "-KSP|-adoption" -replace "[0-9v.-]*\.zip$"}} | group mod | sort count | ? {$_.count -gt 1}
 if ($duplicates) {
-$duplicates | select count,name | oh
-if ($(Read-Host -Prompt "Do you want to delete older versions (enter 'yes', any other input will be considered 'no')?") -eq "yes") {$duplicates | % {$_.group | select -exp fullname -skip 1} | %{del "$_"; echo $_}} else {echo "Canceled."}
+$todelete = $duplicates | select count,name | ogv -title "Select mods to delete older cached versions:" -pass | select -exp name
+if ($todelete) {$duplicates | ? {$_.name -in $todelete} | % {$_.group | select -exp fullname -skip 1} | %{del "$_"; echo $_}} else {echo "Canceled."}
 } else {echo "`nNo duplicates found"}
 }
 
